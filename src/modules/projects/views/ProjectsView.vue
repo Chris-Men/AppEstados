@@ -12,18 +12,27 @@
       </thead>
       <tbody>
         <tr v-for="(proyecto, i) in proyectosStore.proyectos" :key="i" class="hover">
-         <th> {{ i + 1 }}</th>
-         <td>
-          {{ proyecto.nombre }}</td>
-         <td>
-          {{ proyecto.tareas }}
-          <button @click="incrementarTareas(i)" class="ml-2 btn btn-sm btn-secondary">+1</button></td>
-         <td><progress :value="proyecto.progreso" class="progress progress-primary w-56"  max="100"></progress></td>
+          <th>{{ i + 1 }}</th>
+          <td>{{ proyecto.nombre }}</td>
+          <td>
+            <!-- Muestra el número de tareas actuales y el porcentaje de progreso -->
+            <span class="text-lg font-semibold">
+              {{ proyecto.tareas.length }} / 10 tareas ({{ Math.min((proyecto.tareas.length / 10) * 100, 100) }}%)
+            </span>
+          </td>
+          <td>
+            <progress 
+              :value="proyecto.progreso" 
+              class="progress progress-primary w-56" 
+              max="100"
+            ></progress>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
 
+  <!-- Modals -->
   <input-modal
     :open="modalOpen"
     @close="modalOpen = false"
@@ -72,20 +81,11 @@ import { ref } from 'vue';
 const modalOpen = ref(false);
 const customModalOpen = ref(false);
 
-/*const onNewValue = (projectName: string) => {
-  console.log({ projectName });
-};*/
-
 import { useProyectosStore } from '../store/projects.store';
 const proyectosStore = useProyectosStore();
 
 const onNewValue = (nombreProyecto: string) => {
   proyectosStore.agregarProyecto(nombreProyecto);
-  modalOpen.value = false; // Cierra el modal despues de agregar un nuevo proyecto
-  //console.log({ proyectosStore });
-}
-
-const incrementarTareas = (i: number) => {
-  proyectosStore.incrementarTareas(i);
+  modalOpen.value = false; // Cierra el modal después de agregar un nuevo proyecto
 }
 </script>
