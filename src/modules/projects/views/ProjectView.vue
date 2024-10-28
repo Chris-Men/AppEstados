@@ -85,98 +85,104 @@
 
 
   
-  <script lang="ts" setup>
+<script lang="ts" setup>
+import { ref, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { useProyectosStore } from '@/modules/projects/store/projects.store';
 
-  import { ref, computed } from 'vue';
-  import { useRoute } from 'vue-router';
-  import { useProyectosStore } from '@/modules/projects/store/projects.store';
-  
-  // Store y rutas
-  const proyectosStore = useProyectosStore();
-  const route = useRoute();
-  const proyectoId = route.params.id as string;
-  
-  // Obtener el proyecto actual por ID
-  const proyecto = computed(() =>
-    proyectosStore.proyectos.find((p) => p.id === proyectoId)
-  );
-  
-  // Variables reactivas
-  const nuevaTarea = ref('');
-  const tareaActualizada = ref('');
-  const indiceTarea = ref<number | null>(null);
-  const mostrarFormulario = ref(false);
-  const mostrarModalEliminar = ref(false);
-  const indiceEliminar = ref<number | null>(null);
-  
-  // Función para agregar una nueva tarea
-  const agregarTarea = () => {
+// Store y rutas
+const proyectosStore = useProyectosStore();
+const route = useRoute();
+const proyectoId = ref(route.params.id as string);
+
+// Obtenemos el proyecto actual por ID
+const proyecto = computed(() => 
+  proyectosStore.proyectos.find((p) => p.id === proyectoId.value)
+);
+
+// Actualiza proyectoId y proyecto al cambiar la ruta
+watch(() => route.params.id, (newId) => {
+  proyectoId.value = newId as string;
+  nuevaTarea.value = ''; // Limpia campos
+  tareaActualizada.value = '';
+});
+
+// Variables reactivas
+const nuevaTarea = ref('');
+const tareaActualizada = ref('');
+const indiceTarea = ref<number | null>(null);
+const mostrarFormulario = ref(false);
+const mostrarModalEliminar = ref(false);
+const indiceEliminar = ref<number | null>(null);
+
+// Función para agregar una nueva tarea
+const agregarTarea = () => {
   if (nuevaTarea.value.trim() !== '') {
-    proyectosStore.agregarTarea(proyectoId, nuevaTarea.value); // Pasa solo el nombre de la tarea
+    proyectosStore.agregarTarea(proyectoId.value, nuevaTarea.value); // Pasa solo el nombre de la tarea
     nuevaTarea.value = '';
   }
 };
-  
-  // Función para confirmar la eliminación de una tarea
-  const confirmarEliminarTarea = (index: number) => {
-    indiceEliminar.value = index;
-    mostrarModalEliminar.value = true;
-  };
-  
-  // Función para eliminar una tarea
-  const eliminarTarea = () => {
-    if (indiceEliminar.value !== null) {
-      proyectosStore.eliminarTarea(proyectoId, indiceEliminar.value);
-      cancelarEliminar();
-    }
-  };
-  
-  // Función para cancelar la eliminación
-  const cancelarEliminar = () => {
-    mostrarModalEliminar.value = false;
-    indiceEliminar.value = null;
-  };
-  
-  // Función para iniciar la edición de una tarea
-  const editarTarea = (index: number, nombre: string) => {
-    indiceTarea.value = index;
-    tareaActualizada.value = nombre;
-    mostrarFormulario.value = true;
-  };
-  
-  // Función para guardar la tarea actualizada
-  const guardarActualizacion = () => {
-    if (indiceTarea.value !== null && tareaActualizada.value.trim() !== '') {
-      proyectosStore.actualizarTarea(proyectoId, indiceTarea.value, tareaActualizada.value);
-      cancelarEdicion();
-    }
-  };
-  
-  // Función para cancelar la edición
-  const cancelarEdicion = () => {
-    indiceTarea.value = null;
-    tareaActualizada.value = '';
-    mostrarFormulario.value = false;
-  };
-  
-  // Función para formatear la fecha
-  const formatearFecha = (fecha: string) => {
-    if (!fecha) return 'Fecha no disponible';
-    const nuevaFecha = new Date(fecha);
-    if (isNaN(nuevaFecha.getTime())) return 'Fecha inválida';
-    return nuevaFecha.toLocaleString('es-ES', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-  
-  // Función para calcular el progreso
-  const calcularProgreso = () => {
-    const totalTareas = proyecto.value?.tareas.length || 0;
-    return Math.min((totalTareas / 10) * 100, 100);
-  };
-  </script>
+
+// Función para confirmar la eliminación de una tarea
+const confirmarEliminarTarea = (index: number) => {
+  indiceEliminar.value = index;
+  mostrarModalEliminar.value = true;
+};
+
+// Función para eliminar una tarea
+const eliminarTarea = () => {
+  if (indiceEliminar.value !== null) {
+    proyectosStore.eliminarTarea(proyectoId.value, indiceEliminar.value);
+    cancelarEliminar();
+  }
+};
+
+// Función para cancelar la eliminación
+const cancelarEliminar = () => {
+  mostrarModalEliminar.value = false;
+  indiceEliminar.value = null;
+};
+
+// Función para iniciar la edición de una tarea
+const editarTarea = (index: number, nombre: string) => {
+  indiceTarea.value = index;
+  tareaActualizada.value = nombre;
+  mostrarFormulario.value = true;
+};
+
+// Función para guardar la tarea actualizada
+const guardarActualizacion = () => {
+  if (indiceTarea.value !== null && tareaActualizada.value.trim() !== '') {
+    proyectosStore.actualizarTarea(proyectoId.value, indiceTarea.value, tareaActualizada.value);
+    cancelarEdicion();
+  }
+};
+
+// Función para cancelar la edición
+const cancelarEdicion = () => {
+  indiceTarea.value = null;
+  tareaActualizada.value = '';
+  mostrarFormulario.value = false;
+};
+
+// Función para formatear la fecha
+const formatearFecha = (fecha: string) => {
+  if (!fecha) return 'Fecha no disponible';
+  const nuevaFecha = new Date(fecha);
+  if (isNaN(nuevaFecha.getTime())) return 'Fecha inválida';
+  return nuevaFecha.toLocaleString('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+// Función para calcular el progreso
+const calcularProgreso = () => {
+  const totalTareas = proyecto.value?.tareas.length || 0;
+  return Math.min((totalTareas / 10) * 100, 100);
+};
+</script>
   
